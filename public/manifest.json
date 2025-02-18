@@ -1,0 +1,21 @@
+{
+  "short_name": "Note APP",
+  "name": "Note App",
+  "Description" : "This is Notes App",
+  "icons": [
+    {
+      "src": "./notebook1.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "./notebook.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
