@@ -333,7 +333,8 @@ import React, { useState, useEffect } from "react";
 import Note from "../Note/Note";
 import Sidebar from "../Sidebar/Sidebar";
 import "./NoteContainer.css";
-import { Button, Modal, Form } from "react-bootstrap";
+import { Button, Modal, Form, Toast } from "react-bootstrap";
+import confetti from "canvas-confetti";
 
 function NoteContainer() {
   const [notes, setNotes] = useState(() => {
@@ -341,8 +342,14 @@ function NoteContainer() {
     return savedNotes ? JSON.parse(savedNotes) : [];
   });
 
+  const [searchTerm, setSearchTerm] = useState(""); // ✅ New state
+  const [recentlyEditedId, setRecentlyEditedId] = useState(null);
+  const [filterDate, setFilterDate] = useState("");
   const [deletingAll, setDeletingAll] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
+
   const [showModal, setShowModal] = useState(false);
   const [newNote, setNewNote] = useState({
     title: "",
@@ -353,6 +360,25 @@ function NoteContainer() {
   useEffect(() => {
     localStorage.setItem("notes", JSON.stringify(notes));
   }, [notes]);
+
+  // ✅ Filtered notes
+  // const filteredNotes = notes.filter(
+  //   (note) =>
+  //     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     note.text.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+  // ✅ Filtered notes (search + date)
+  const filteredNotes = notes.filter((note) => {
+    const matchesSearch =
+      note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.text.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDate = filterDate
+      ? new Date(note.time).toLocaleDateString("en-CA") === filterDate
+      : true;
+
+    return matchesSearch && matchesDate;
+  });
 
   // Open modal for adding a new note
   const handleAddNoteClick = (color) => {
@@ -378,12 +404,63 @@ function NoteContainer() {
   };
 
   //   // ✅ Update a note
+  // const updateNote = (id, newTitle, newText) => {
+  //   setNotes((prevNotes) =>
+  //     prevNotes.map((note) =>
+  //       note.id === id ? { ...note, title: newTitle, text: newText } : note
+  //     )
+  //   );
+  // };
+  // ✅ Update a note and sort by last edited time
+  // const updateNote = (id, newTitle, newText) => {
+  //   setNotes((prevNotes) => {
+  //     // Update the note
+  //     const updatedNotes = prevNotes.map((note) =>
+  //       note.id === id
+  //         ? {
+  //             ...note,
+  //             title: newTitle,
+  //             text: newText,
+  //             time: new Date().toISOString(),
+  //           }
+  //         : note
+  //     );
+
+  //     // Sort notes by last edited time (descending)
+  //     updatedNotes.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  //     return updatedNotes;
+  //   });
+  // };
+
   const updateNote = (id, newTitle, newText) => {
-    setNotes((prevNotes) =>
-      prevNotes.map((note) =>
-        note.id === id ? { ...note, title: newTitle, text: newText } : note
-      )
-    );
+    setNotes((prevNotes) => {
+      const updatedNotes = prevNotes.map((note) =>
+        note.id === id
+          ? {
+              ...note,
+              title: newTitle,
+              text: newText,
+              time: new Date().toISOString(),
+            }
+          : note
+      );
+
+      updatedNotes.sort((a, b) => new Date(b.time) - new Date(a.time));
+      return updatedNotes;
+    });
+
+    // Confetti 🎉
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ["#4caf50", "#ff9800", "#2196f3", "#e91e63"],
+    });
+
+    // Show toast ✅
+    setToastMsg("Update successful — your note is now on top ✨");
+    setShowToast(true);
   };
 
   const deleteNote = (id) => {
@@ -402,9 +479,11 @@ function NoteContainer() {
   return (
     <div className="container-fluid my-3 app-flex justify-content-between">
       {/* Sidebar */}
-      <div className="col-md-1 slide-app">
-        <Sidebar addNote={handleAddNoteClick} />
-      </div>
+      {!selectedNote && (
+        <div className="col-md-1 slide-app">
+          <Sidebar addNote={handleAddNoteClick} />
+        </div>
+      )}
 
       {/* Notes List */}
       <div className="col-md-11">
@@ -412,23 +491,86 @@ function NoteContainer() {
           <div className="text-white text-center p-2 mb-2 rounded-3">
             <h2 className="fw-bolder">All Notes</h2>
           </div>
+          {/* ✅ Responsive Search bar */}
+          <div className="mb-4">
+            <div className="row justify-content-center">
+              <div className="col-10 col-sm-10 col-md-8 col-lg-6 d-flex gap-2">
+                {/* Search box */}
+                <div className="position-relative w-100">
+                  <span
+                    className="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    <i className="fa-solid fa-magnifying-glass"></i>
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control rounded-pill shadow-sm ps-5"
+                    placeholder="Search notes..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                {/* Date filter */}
+                {/* <input
+                  type="date"
+                  className="form-control"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                /> */}
+              </div>
+            </div>
+          </div>
+
+          <Toast
+            show={showToast}
+            onClose={() => setShowToast(false)}
+            delay={3000}
+            autohide
+            bg="success"
+            className="position-fixed top-0 end-0 m-3 text-white shadow-lg"
+            style={{ zIndex: 2000 }} // ✅ Ensures it's above all notes
+          >
+            <Toast.Header closeButton={false}>
+              <strong className="me-auto">Success</strong>
+            </Toast.Header>
+            <Toast.Body>{toastMsg}</Toast.Body>
+          </Toast>
 
           <div className="note-container-notes d-flex flex-wrap gap-3 justify-content-sm-start justify-content-center align-items-center">
-            {notes.length === 0 ? (
+            {filteredNotes.length === 0 ? (
               <p className="text-muted text-white-50 mt-2">
                 No notes added yet
               </p>
             ) : (
-              notes.map((note) => (
-                <Note
+              // filteredNotes.map((note) => (
+              //   <Note
+              //     key={note.id}
+              //     note={note}
+              //     deleteNote={deleteNote}
+              //     updateNote={updateNote}
+              //     setSelectedNote={setSelectedNote}
+              //     isFullScreen={false}
+              //     deletingAll={deletingAll}
+              //   />
+              // ))
+              filteredNotes.map((note) => (
+                <div
                   key={note.id}
-                  note={note}
-                  deleteNote={deleteNote}
-                  updateNote={updateNote}
-                  setSelectedNote={setSelectedNote}
-                  isFullScreen={false}
-                  deletingAll={deletingAll}
-                />
+                  className={`note-wrapper ${
+                    recentlyEditedId === note.id ? "celebrate" : ""
+                  }`}
+                >
+                  <Note
+                    note={note}
+                    deleteNote={deleteNote}
+                    updateNote={updateNote}
+                    setSelectedNote={setSelectedNote}
+                    isFullScreen={false}
+                    deletingAll={deletingAll}
+                  />
+                </div>
               ))
             )}
           </div>
@@ -456,12 +598,14 @@ function NoteContainer() {
         )}
 
         {/* Delete All Notes Button */}
-        <Button
-          onClick={deleteAllNotes}
-          className="button allNote-del btn btn-danger float-end"
-        >
-          <i className="fa-regular fa-trash-can"></i>
-        </Button>
+        {!selectedNote && (
+          <Button
+            onClick={deleteAllNotes}
+            className="button allNote-del btn btn-danger float-end"
+          >
+            <i className="fa-regular fa-trash-can"></i>
+          </Button>
+        )}
       </div>
 
       {/* Add Note Modal */}

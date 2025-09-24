@@ -237,6 +237,12 @@ function Note({
     setSelectedNote(null);
   };
 
+  // Sync local state with updated note props
+  useEffect(() => {
+    setTitle(note.title || "");
+    setText(note.text || "");
+  }, [note]);
+
   useEffect(() => {
     if (deletingAll) {
       setDeleting(true);
@@ -271,8 +277,13 @@ function Note({
         } ${deleting ? "note-zoom-out" : ""}`}
         style={{ backgroundColor: note.color }}
       >
+        {/* Title Section */}
         {!isEditing ? (
-          <div className="note-title single-line border-0 pb-2 text-black-50 bg-transparent fs-4">
+          <div
+            className="note-title single-line border-0 pb-2 text-black-50 bg-transparent fw-bold"
+            onClick={() => setSelectedNote(note)} // ✅ Click to Edit
+            style={{ cursor: "pointer" }}
+          >
             {title}
           </div>
         ) : (
@@ -286,8 +297,15 @@ function Note({
           />
         )}
 
+        {/* Text Section */}
         {!isEditing ? (
-          <div className="truncated-text text-black-50 fw-bold">{text}</div>
+          <div
+            className="truncated-text"
+            onClick={() => setSelectedNote(note)} // ✅ Click to Edit
+            style={{ cursor: "pointer" }}
+          >
+            {text}
+          </div>
         ) : (
           <textarea
             className="note_text border-0 text-black-50 bg-transparent"
@@ -305,35 +323,45 @@ function Note({
         >
           <div className="d-flex align-items-center justify-content-between note-footer">
             <div>
-              <p className="time mb-0">
-                {new Date(note.time).toLocaleString()}
+              {/* <p className="time mb-0">
+                {new Date(note.time).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                })}
+              </p> */}
+              <p className="time mb-0 d-none d-md-block">
+                {new Date(note.time).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+
+              <p className="time mb-0 d-md-none">
+                {new Date(note.time).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                })}
               </p>
             </div>
-            <div>
-              {!isFullScreen && (
-                <>
-                  {/* View Icon - Opens Full-Screen Modal */}
-                  <i
-                    className="fa-regular fa-eye "
-                    onClick={() => setShowModal(true)}
-                    style={{ cursor: "pointer" }}
-                    title="View Note"
-                  ></i>
-
-                  <i
-                    className="fa-regular fa-pen-to-square mx-2"
-                    onClick={() => setSelectedNote(note)}
-                  ></i>
-                  <i
-                    className="fa-regular fa-trash-can"
-                    onClick={() => {
-                      setDeleting(true);
-                      setTimeout(() => deleteNote(note.id), 300);
-                    }}
-                  ></i>
-                </>
-              )}
-            </div>
+            {!isFullScreen && (
+              <>
+                <i
+                  className="fa-regular fa-trash-can 
+             text-danger 
+             bg-light 
+             rounded-circle 
+             p-1 
+             shadow-sm 
+             hover-effect"
+                  onClick={() => {
+                    setDeleting(true);
+                    setTimeout(() => deleteNote(note.id), 300);
+                  }}
+                  title="Delete Note"
+                />
+              </>
+            )}
           </div>
 
           {/* Show Save button only in Full-Screen Edit Mode */}

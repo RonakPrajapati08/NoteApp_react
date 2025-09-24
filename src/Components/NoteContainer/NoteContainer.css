@@ -37,6 +37,59 @@
   cursor: pointer;
 }
 
+.slide-app.fullscreen-hidden {
+  display: none !important;
+}
+
+/* Celebration animation */
+/* .note-wrapper.celebrate {
+  animation: celebratePop 0.8s ease-out, glowPulse 1.5s ease-in-out;
+  position: relative;
+}
+
+@keyframes celebratePop {
+  0% {
+    transform: scale(0.9) rotate(-2deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 0px rgba(0, 255, 150, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 150, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 0px rgba(0, 255, 150, 0.7);
+  }
+} */
+
+.note-wrapper.celebrate {
+  animation: glowPulse 1.5s ease-in-out;
+  position: relative;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+  }
+  100% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0.7);
+  }
+}
+
 /* .btn-success {
   display: block;
   width: 100px;
